@@ -108,7 +108,7 @@ index dab70e35fa..deef4f848a 100644
  CONFIG_UART7_TXBUFSIZE=800
  CONFIG_UART8_RXBUFSIZE=600
 diff --git a/boards/micoair/h743-v2/src/board_config.h b/boards/micoair/h743-v2/src/board_config.h
-index e3f211638e..fa7f0da7e2 100644
+index e3f211638e..c4ec7111f0 100644
 --- a/boards/micoair/h743-v2/src/board_config.h
 +++ b/boards/micoair/h743-v2/src/board_config.h
 @@ -107,7 +107,8 @@
@@ -116,7 +116,7 @@ index e3f211638e..fa7f0da7e2 100644
  
  #define BOARD_HAS_PWM  DIRECT_PWM_OUTPUT_CHANNELS
 -
-+#define GPIO_BTN_SAFETY (GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTB|GPIO_PIN5)
++#define GPIO_BTN_SAFETY (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTB|GPIO_PIN5)
 +#define BOARD_HAS_SAFETY_BUTTON 1
  #define GPIO_TONE_ALARM_IDLE    /* PD15 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN15)
  #define GPIO_TONE_ALARM_GPIO    /* PD15 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN15)
@@ -130,7 +130,7 @@ index e3f211638e..fa7f0da7e2 100644
  
  #define BOARD_ENABLE_CONSOLE_BUFFER
 diff --git a/src/drivers/safety_button/SafetyButton.cpp b/src/drivers/safety_button/SafetyButton.cpp
-index aa5c45e8d9..df71d20657 100644
+index aa5c45e8d9..6cf4a89c17 100644
 --- a/src/drivers/safety_button/SafetyButton.cpp
 +++ b/src/drivers/safety_button/SafetyButton.cpp
 @@ -65,14 +65,21 @@ SafetyButton::~SafetyButton()
@@ -158,6 +158,15 @@ index aa5c45e8d9..df71d20657 100644
  			_button_publisher.safetyButtonTriggerEvent();
  		}
  
+@@ -154,7 +161,7 @@ SafetyButton::Run()
+ 		return;
+ 	}
+ 
+-	const bool button_pressed = px4_arch_gpioread(GPIO_BTN_SAFETY);
++	const bool button_pressed = !px4_arch_gpioread(GPIO_BTN_SAFETY);
+ 
+ 	// control safety switch LED & safety button
+ 	if (!_has_px4io) {
 diff --git a/src/drivers/safety_button/SafetyButton.hpp b/src/drivers/safety_button/SafetyButton.hpp
 index 0f38b6ba82..277289cd81 100644
 --- a/src/drivers/safety_button/SafetyButton.hpp

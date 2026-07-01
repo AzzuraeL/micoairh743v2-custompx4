@@ -28,14 +28,16 @@ The hardware safety switch was connected to the `PB5` pin, but this pin was nati
 * **`boards/micoair/h743-v2/nuttx-config/nsh/defconfig`**: Commented out `CONFIG_STM32H7_UART5=y`, `CONFIG_UART5_RXBUFSIZE`, and `CONFIG_UART5_TXBUFSIZE` to disable UART5 at the OS level.
 * **`boards/micoair/h743-v2/nuttx-config/include/board.h`**: Commented out the definitions mapping `GPIO_UART5_RX` and `GPIO_UART5_TX` to `PB5` and `PB6` to free the GPIO for general use.
 
-## 3. Safety Button Pin Configuration (Active-High Toggle)
+## 3. Safety Button Pin Configuration (Active-Low / GND Toggle)
 
-The safety button was previously set as a floating input (`GPIO_FLOAT`). Because PX4 expects a HIGH (3.3V) signal when the safety switch is pressed, the pin was reconfigured with an internal pull-down resistor.
+The safety button was previously set as a floating input (`GPIO_FLOAT`). To allow safe manual triggering by touching the wire to Ground (GND), the pin was reconfigured with an internal pull-up resistor and the driver logic was inverted.
 
 **Changes Made:**
 * **`boards/micoair/h743-v2/src/board_config.h`**: 
-  * Replaced `GPIO_FLOAT` with `GPIO_PULLDOWN` for `GPIO_BTN_SAFETY`.
-  * The button now reliably triggers when briefly shorted to a **3.3V** pin.
+  * Replaced `GPIO_FLOAT` with `GPIO_PULLUP` for `GPIO_BTN_SAFETY`.
+* **`src/drivers/safety_button/SafetyButton.cpp`**:
+  * Inverted the pin read logic (`const bool button_pressed = !px4_arch_gpioread(GPIO_BTN_SAFETY);`).
+  * The button now reliably triggers when safely shorted to **GND**.
 
 ## 4. Enabling the Safety Button Driver at Startup
 
