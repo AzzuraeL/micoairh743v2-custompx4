@@ -1,0 +1,194 @@
+diff --git a/boards/micoair/h743-v2/default.px4board b/boards/micoair/h743-v2/default.px4board
+index 9f6d00a5d0..22e9b4ce68 100644
+--- a/boards/micoair/h743-v2/default.px4board
++++ b/boards/micoair/h743-v2/default.px4board
+@@ -11,21 +11,18 @@ CONFIG_BOARD_SERIAL_RC="/dev/ttyS5"
+ CONFIG_BOARD_PARAM_FILE="/fs/microsd/params"
+ CONFIG_DRIVERS_ADC_BOARD_ADC=y
+ CONFIG_DRIVERS_BAROMETER_GOERTEK_SPL06=y
+-CONFIG_DRIVERS_CAMERA_CAPTURE=y
+-CONFIG_DRIVERS_CAMERA_TRIGGER=y
+ CONFIG_DRIVERS_CDCACM_AUTOSTART=y
+ CONFIG_COMMON_DIFFERENTIAL_PRESSURE=y
+ CONFIG_DRIVERS_DIFFERENTIAL_PRESSURE_ASP5033=y
+ CONFIG_DRIVERS_DIFFERENTIAL_PRESSURE_ETS=y
+ CONFIG_DRIVERS_DIFFERENTIAL_PRESSURE_MS4515=y
+ CONFIG_COMMON_DISTANCE_SENSOR=y
+-CONFIG_DRIVERS_DSHOT=y
++CONFIG_DRIVERS_DISTANCE_SENSOR_TFMINI=y
+ CONFIG_DRIVERS_GNSS_SEPTENTRIO=y
+ CONFIG_DRIVERS_GPS=y
+ CONFIG_DRIVERS_IMU_BOSCH_BMI088=y
+ CONFIG_DRIVERS_IMU_BOSCH_BMI270=y
+ CONFIG_COMMON_MAGNETOMETER=y
+-CONFIG_COMMON_OPTICAL_FLOW=y
+ CONFIG_DRIVERS_OSD_MSP_OSD=y
+ CONFIG_DRIVERS_POWER_MONITOR_INA220=y
+ CONFIG_DRIVERS_POWER_MONITOR_INA226=y
+@@ -42,7 +39,6 @@ CONFIG_DRIVERS_SMART_BATTERY_BATMON=y
+ CONFIG_DRIVERS_TAP_ESC=y
+ CONFIG_COMMON_TELEMETRY=y
+ CONFIG_DRIVERS_TONE_ALARM=y
+-CONFIG_COMMON_UWB=y
+ CONFIG_COMMON_WIND_SENSOR=y
+ CONFIG_MODULES_AIRSHIP_ATT_CONTROL=y
+ CONFIG_MODULES_AIRSPEED_SELECTOR=y
+@@ -59,7 +55,6 @@ CONFIG_MODULES_FW_ATT_CONTROL=y
+ CONFIG_MODULES_FW_AUTOTUNE_ATTITUDE_CONTROL=y
+ CONFIG_MODULES_FW_POS_CONTROL=y
+ CONFIG_MODULES_FW_RATE_CONTROL=y
+-CONFIG_MODULES_GIMBAL=y
+ CONFIG_MODULES_GYRO_CALIBRATION=y
+ CONFIG_MODULES_GYRO_FFT=y
+ CONFIG_MODULES_LAND_DETECTOR=y
+@@ -80,7 +75,6 @@ CONFIG_MODULES_PAYLOAD_DELIVERER=y
+ CONFIG_MODULES_RC_UPDATE=y
+ CONFIG_MODULES_SENSORS=y
+ CONFIG_MODULES_TEMPERATURE_COMPENSATION=y
+-CONFIG_MODULES_UXRCE_DDS_CLIENT=y
+ CONFIG_MODULES_VTOL_ATT_CONTROL=y
+ CONFIG_SYSTEMCMDS_ACTUATOR_TEST=y
+ CONFIG_SYSTEMCMDS_BL_UPDATE=y
+@@ -104,7 +98,7 @@ CONFIG_SYSTEMCMDS_TESTS=y
+ CONFIG_SYSTEMCMDS_TOP=y
+ CONFIG_SYSTEMCMDS_TOPIC_LISTENER=y
+ CONFIG_SYSTEMCMDS_TUNE_CONTROL=y
+-CONFIG_SYSTEMCMDS_UORB=y
+ CONFIG_SYSTEMCMDS_USB_CONNECTED=y
+ CONFIG_SYSTEMCMDS_VER=y
+ CONFIG_SYSTEMCMDS_WORK_QUEUE=y
++CONFIG_DRIVERS_SAFETY_BUTTON=y
+diff --git a/boards/micoair/h743-v2/init/rc.board_defaults b/boards/micoair/h743-v2/init/rc.board_defaults
+index 76ebd8084f..4a4d83e54b 100644
+--- a/boards/micoair/h743-v2/init/rc.board_defaults
++++ b/boards/micoair/h743-v2/init/rc.board_defaults
+@@ -26,3 +26,5 @@ param set-default MSP_OSD_CONFIG 202
+ param set-default CA_AIRFRAME 0
+ param set-default CA_ROTOR_COUNT 4
+ param set-default CBRK_SUPPLY_CHK 894281
++
++safety_button start
+diff --git a/boards/micoair/h743-v2/nuttx-config/include/board.h b/boards/micoair/h743-v2/nuttx-config/include/board.h
+index 433aa04a54..c055970021 100644
+--- a/boards/micoair/h743-v2/nuttx-config/include/board.h
++++ b/boards/micoair/h743-v2/nuttx-config/include/board.h
+@@ -365,8 +365,8 @@
+ #define GPIO_UART4_RX    GPIO_UART4_RX_2    /* PA1  */
+ #define GPIO_UART4_TX    GPIO_UART4_TX_2    /* PA0  */
+ 
+-#define GPIO_UART5_RX    GPIO_UART5_RX_2    /* PB5  */
+-#define GPIO_UART5_TX    GPIO_UART5_TX_2    /* PB6  */
++// #define GPIO_UART5_RX    GPIO_UART5_RX_2    /* PB5  */
++// #define GPIO_UART5_TX    GPIO_UART5_TX_2    /* PB6  */
+ 
+ #define GPIO_USART6_RX   GPIO_USART6_RX_1   /* PC7  */
+ #define GPIO_USART6_TX   GPIO_USART6_TX_1   /* PC6  */
+diff --git a/boards/micoair/h743-v2/nuttx-config/nsh/defconfig b/boards/micoair/h743-v2/nuttx-config/nsh/defconfig
+index dab70e35fa..deef4f848a 100644
+--- a/boards/micoair/h743-v2/nuttx-config/nsh/defconfig
++++ b/boards/micoair/h743-v2/nuttx-config/nsh/defconfig
+@@ -208,7 +208,7 @@ CONFIG_STM32H7_TIM3=y
+ CONFIG_STM32H7_TIM4=y
+ CONFIG_STM32H7_TIM8=y
+ CONFIG_STM32H7_UART4=y
+-CONFIG_STM32H7_UART5=y
++# CONFIG_STM32H7_UART5=y
+ CONFIG_STM32H7_UART7=y
+ CONFIG_STM32H7_UART8=y
+ CONFIG_STM32H7_USART1=y
+@@ -224,8 +224,8 @@ CONFIG_SYSTEM_NSH=y
+ CONFIG_TASK_NAME_SIZE=24
+ CONFIG_UART4_RXBUFSIZE=600
+ CONFIG_UART4_TXBUFSIZE=800
+-CONFIG_UART5_RXBUFSIZE=600
+-CONFIG_UART5_TXBUFSIZE=800
++# CONFIG_UART5_RXBUFSIZE=600
++# CONFIG_UART5_TXBUFSIZE=800
+ CONFIG_UART7_RXBUFSIZE=600
+ CONFIG_UART7_TXBUFSIZE=800
+ CONFIG_UART8_RXBUFSIZE=600
+diff --git a/boards/micoair/h743-v2/src/board_config.h b/boards/micoair/h743-v2/src/board_config.h
+index e3f211638e..fa7f0da7e2 100644
+--- a/boards/micoair/h743-v2/src/board_config.h
++++ b/boards/micoair/h743-v2/src/board_config.h
+@@ -107,7 +107,8 @@
+ #define DIRECT_INPUT_TIMER_CHANNELS  10
+ 
+ #define BOARD_HAS_PWM  DIRECT_PWM_OUTPUT_CHANNELS
+-
++#define GPIO_BTN_SAFETY (GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTB|GPIO_PIN5)
++#define BOARD_HAS_SAFETY_BUTTON 1
+ #define GPIO_TONE_ALARM_IDLE    /* PD15 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN15)
+ #define GPIO_TONE_ALARM_GPIO    /* PD15 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN15)
+ 
+@@ -144,6 +145,7 @@
+ #define PX4_GPIO_INIT_LIST { \
+ 		PX4_ADC_GPIO, \
+ 		GPIO_TONE_ALARM_IDLE,             \
++		GPIO_BTN_SAFETY, \
+ 	}
+ 
+ #define BOARD_ENABLE_CONSOLE_BUFFER
+diff --git a/src/drivers/safety_button/SafetyButton.cpp b/src/drivers/safety_button/SafetyButton.cpp
+index aa5c45e8d9..df71d20657 100644
+--- a/src/drivers/safety_button/SafetyButton.cpp
++++ b/src/drivers/safety_button/SafetyButton.cpp
+@@ -65,14 +65,21 @@ SafetyButton::~SafetyButton()
+ void
+ SafetyButton::CheckSafetyRequest(bool button_pressed)
+ {
+-	/* Keep button pressed for one second to turn off safety */
++	vehicle_status_s status;
++	bool safety_off = false;
++	if (_vehicle_status_sub.copy(&status)) {
++		safety_off = status.safety_off;
++	}
++
++	uint8_t target_cycle_count = safety_off ? 30 : 90;
++
+ 	if (button_pressed) {
+ 
+-		if (_button_counter <= CYCLE_COUNT) {
++		if (_button_counter <= target_cycle_count) {
+ 			_button_counter++;
+ 		}
+ 
+-		if (_button_counter == CYCLE_COUNT) {
++		if (_button_counter == target_cycle_count) {
+ 			_button_publisher.safetyButtonTriggerEvent();
+ 		}
+ 
+diff --git a/src/drivers/safety_button/SafetyButton.hpp b/src/drivers/safety_button/SafetyButton.hpp
+index 0f38b6ba82..277289cd81 100644
+--- a/src/drivers/safety_button/SafetyButton.hpp
++++ b/src/drivers/safety_button/SafetyButton.hpp
+@@ -39,6 +39,7 @@
+ #include <px4_platform_common/module.h>
+ #include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
+ #include <button/ButtonPublisher.hpp>
++#include <uORB/topics/vehicle_status.h>
+ 
+ class SafetyButton : public ModuleBase<SafetyButton>, public px4::ScheduledWorkItem
+ {
+@@ -75,5 +76,6 @@ private:
+ 	int				_pairing_button_counter{0};
+ 
+ 	uORB::Subscription	_armed_sub{ORB_ID(actuator_armed)};
++	uORB::Subscription	_vehicle_status_sub{ORB_ID(vehicle_status)};
+ 
+ };
+diff --git a/src/modules/commander/Safety.cpp b/src/modules/commander/Safety.cpp
+index 8abf304535..e149b90186 100644
+--- a/src/modules/commander/Safety.cpp
++++ b/src/modules/commander/Safety.cpp
+@@ -61,7 +61,9 @@ bool Safety::safetyButtonHandler()
+ 		button_event_s button_event;
+ 
+ 		while (_safety_button_sub.update(&button_event)) {
+-			_safety_off |= button_event.triggered; // triggered safety button activates safety off
++			if (button_event.triggered) {
++				_safety_off = !_safety_off;
++			}
+ 		}
+ 	}
+ 
