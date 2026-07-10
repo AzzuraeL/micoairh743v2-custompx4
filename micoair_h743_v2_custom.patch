@@ -1,5 +1,5 @@
 diff --git a/boards/micoair/h743-v2/default.px4board b/boards/micoair/h743-v2/default.px4board
-index 9f6d00a5d0..22e9b4ce68 100644
+index 9f6d00a5d0..4adbc641bc 100644
 --- a/boards/micoair/h743-v2/default.px4board
 +++ b/boards/micoair/h743-v2/default.px4board
 @@ -11,21 +11,18 @@ CONFIG_BOARD_SERIAL_RC="/dev/ttyS5"
@@ -49,7 +49,7 @@ index 9f6d00a5d0..22e9b4ce68 100644
  CONFIG_MODULES_VTOL_ATT_CONTROL=y
  CONFIG_SYSTEMCMDS_ACTUATOR_TEST=y
  CONFIG_SYSTEMCMDS_BL_UPDATE=y
-@@ -104,7 +98,7 @@ CONFIG_SYSTEMCMDS_TESTS=y
+@@ -104,7 +98,8 @@ CONFIG_SYSTEMCMDS_TESTS=y
  CONFIG_SYSTEMCMDS_TOP=y
  CONFIG_SYSTEMCMDS_TOPIC_LISTENER=y
  CONFIG_SYSTEMCMDS_TUNE_CONTROL=y
@@ -58,6 +58,7 @@ index 9f6d00a5d0..22e9b4ce68 100644
  CONFIG_SYSTEMCMDS_VER=y
  CONFIG_SYSTEMCMDS_WORK_QUEUE=y
 +CONFIG_DRIVERS_SAFETY_BUTTON=y
++CONFIG_SYSTEMCMDS_UORB=y
 diff --git a/boards/micoair/h743-v2/init/rc.board_defaults b/boards/micoair/h743-v2/init/rc.board_defaults
 index 76ebd8084f..4a4d83e54b 100644
 --- a/boards/micoair/h743-v2/init/rc.board_defaults

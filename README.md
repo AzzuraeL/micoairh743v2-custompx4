@@ -14,11 +14,11 @@ Several modules were disabled to save firmware space and processing power for un
 * `CONFIG_COMMON_UWB`
 * `CONFIG_MODULES_GIMBAL`
 * `CONFIG_MODULES_UXRCE_DDS_CLIENT`
-* `CONFIG_SYSTEMCMDS_UORB`
 
 **Enabled Modules/Drivers:**
 * `CONFIG_DRIVERS_DISTANCE_SENSOR_TFMINI=y`
 * `CONFIG_DRIVERS_SAFETY_BUTTON=y`
+* `CONFIG_SYSTEMCMDS_UORB=y`
 
 ## 2. Hardware Pin Conflict Resolution (PB5)
 
@@ -68,21 +68,3 @@ By default, the PX4 Commander module uses the hardware safety button as a one-wa
   * Replaced the one-way `_safety_off |= button_event.triggered;` logic with a true toggle: `_safety_off = !_safety_off;`.
 
 > **⚠️ WARNING:** Because the safety button is now a true toggle switch, it is active at all times. **Pressing it while the drone is in flight will immediately cut the motors.** Ensure the switch is safely mounted where it cannot be accidentally triggered!
-
----
-
-## 7. PX4 License & Redistribution Requirements
-
-PX4 Autopilot is open-source software released under the **BSD 3-Clause License**. Because you have modified the original PX4 source code, you must adhere to the following rules if you choose to distribute your modified version, distribute the `.px4` firmware binary, or publish your code in a public repository:
-
-1. **Retain Copyright Notices:** You must not remove or alter the original copyright headers present at the top of the PX4 source files (e.g., `SafetyButton.cpp`, `Safety.cpp`).
-2. **Include the License File:** If you distribute the source code or the compiled `.px4` binary, you must include a copy of the original PX4 `LICENSE` file (the BSD 3-Clause License text).
-3. **No Endorsement:** You cannot use the name "PX4", "Dronecode", or the names of the original developers to endorse or promote your modified flight controller project without their specific prior written permission.
-
-### How to share your work legally and cleanly in your own public repo:
-Rather than uploading the entire 1+ GB PX4 repository, the cleanest way to share your work is to create a small, dedicated repository for your custom MicoAir H743-v2 firmware containing:
-
-1. **`README.md`**: (This file) explaining what the modifications do.
-2. **`micoair_h743_v2_custom.patch`**: A git patch file containing all your code changes. Others can simply apply this patch to a fresh PX4 v1.17.0 clone.
-3. **`micoair_h743-v2_default.px4`**: The compiled firmware binary (optional, but helpful for non-developers).
-4. **`LICENSE`**: A copy of the PX4 BSD 3-Clause license to satisfy redistribution requirements for the binary/patch.
