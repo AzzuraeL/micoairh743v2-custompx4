@@ -202,3 +202,24 @@ index 8abf304535..e149b90186 100644
  		}
  	}
  
+diff --git a/src/drivers/gps/devices/src/ubx.cpp b/src/drivers/gps/devices/src/ubx.cpp
+index 887d5d7..586a833 100644
+--- a/src/drivers/gps/devices/src/ubx.cpp
++++ b/src/drivers/gps/devices/src/ubx.cpp
+@@ -596,9 +596,15 @@ int GPSDriverUBX::configureDevice(const GPSConfig &config, const int32_t uart2_b
+ 	// F9P L1L5 the max update rate with 4 constellations is 8Hz without RTK and 7Hz with RTK
+ 	// DAN-F10N the max update rate is 10Hz with GPS+GAL+BDS(Default)
+ 	// Receivers such as M9N and DAN-F10N can go higher than 10Hz, but the number of used satellites will be restricted to 16. (Not mentioned in datasheet)
+-	int rate_meas = 100; // 10Hz
++	// M9N fix: use 8Hz (125ms) to avoid the 16-satellite hardware restriction that occurs at >=10Hz.
++	int rate_meas = 100; // 10Hz (default for unrecognized boards)
+ 
+ 	switch (_board) {
++	case Board::u_blox9: // M9N (and other non-F9P u-blox9 modules)
++		// At >=10Hz the M9N restricts satellites_used to 16. 8Hz avoids this.
++		rate_meas = 125; // 8Hz
++		break;
++
+ 	case Board::u_blox9_F9P_L1L2:
+ 		rate_meas = 200; // 5Hz
+ 		break;

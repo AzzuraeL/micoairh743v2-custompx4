@@ -1,6 +1,6 @@
 # PX4-Autopilot Custom Modifications (MicoAir H743-v2)
 
-This README comprehensively documents all custom modifications made to the `PX4-Autopilot` (v1.17.0) source code to properly configure and enhance the hardware safety button behavior, as well as the board configuration for the **MicoAir H743-v2** flight controller.
+This README comprehensively documents all custom modifications made to the `PX4-Autopilot` (v1.17.0) source code to properly configure and enhance the hardware safety button behavior, the board configuration for the **MicoAir H743-v2** flight controller, and GPS performance improvements for the **u-blox M9N (CUAV Neo 3)**.
 
 ## 1. Board Configuration Changes (`default.px4board`)
 
@@ -68,3 +68,23 @@ By default, the PX4 Commander module uses the hardware safety button as a one-wa
   * Replaced the one-way `_safety_off |= button_event.triggered;` logic with a true toggle: `_safety_off = !_safety_off;`.
 
 > **⚠️ WARNING:** Because the safety button is now a true toggle switch, it is active at all times. **Pressing it while the drone is in flight will immediately cut the motors.** Ensure the switch is safely mounted where it cannot be accidentally triggered!
+
+## 7. u-blox M9N GPS — Satellite Count Fix (>16 Satellites)
+
+By default, PX4 configures the u-blox M9N (used in the CUAV Neo 3) at **10 Hz** (100 ms measurement interval). This triggers a **hardware-level restriction** inside the M9N chip that caps `numSV` (satellites used/tracked) to a maximum of **16**, even when many more satellites are visible. This behavior is not documented in the u-blox datasheet but is confirmed in PX4 community discussions.
+
+**Root cause:** The M9N restricts its internal navigation engine to 16 satellites when running at ≥10 Hz to meet its computational budget.
+
+**Fix:** Reduce the measurement rate for the M9N to **8 Hz (125 ms)**, which is below the threshold that triggers the restriction, while remaining fast enough for flight control.
+
+**Changes Made:**
+* **`src/drivers/gps/devices/src/ubx.cpp`** (GPS submodule):
+  * Added an explicit `case Board::u_blox9:` in the measurement-rate `switch` statement.
+  * Sets `rate_meas = 125` (8 Hz) for all u-blox9-family boards (M9N and equivalent).
+  * Previously the M9N fell through to `default` and inherited the 10 Hz rate.
+
+| Rate  | Interval | M9N Max Satellites       |
+|-------|----------|--------------------------|
+| 10 Hz | 100 ms   | **16 (hardware capped)** ← was default |
+| **8 Hz** | **125 ms** | **All visible** ← now applied |
+| 5 Hz  | 200 ms   | All visible              |
