@@ -77,9 +77,20 @@ By default, the PX4 Commander module uses the hardware safety button as a one-wa
 * **`src/modules/commander/Safety.cpp`**: 
   * Replaced the one-way `_safety_off |= button_event.triggered;` logic with a true toggle: `_safety_off = !_safety_off;`.
 
+## 8. Multi-Instance TFmini Driver Support
+
+By default, the PX4 `tfmini` driver is a singleton and only supports running a single instance on a single serial port. This limitation was removed to allow multiple TFmini sensors to run concurrently on different serial ports.
+
+**Changes Made:**
+* **`src/drivers/distance_sensor/tfmini/TFMINI.hpp`**:
+  * Added a `get_port()` helper method.
+* **`src/drivers/distance_sensor/tfmini/tfmini_main.cpp`**:
+  * Rewrote the singleton `g_dev` to use a pointer array `g_devs[4]` supporting up to 4 concurrent sensors.
+  * Updated `start`, `status`, and `stop` functions to iterate over the sensor array.
+
 > **⚠️ WARNING:** Because the safety button is now a true toggle switch, it is active at all times. **Pressing it while the drone is in flight will immediately cut the motors.** Ensure the switch is safely mounted where it cannot be accidentally triggered!
 
-## 7. u-blox M9N GPS — Satellite Count Fix (>16 Satellites)
+## 9. u-blox M9N GPS — Satellite Count Fix (>16 Satellites)
 
 By default, PX4 configures the u-blox M9N (used in the CUAV Neo 3) at **10 Hz** (100 ms measurement interval). This triggers a **hardware-level restriction** inside the M9N chip that caps `numSV` (satellites used/tracked) to a maximum of **16**, even when many more satellites are visible. This behavior is not documented in the u-blox datasheet but is confirmed in PX4 community discussions.
 

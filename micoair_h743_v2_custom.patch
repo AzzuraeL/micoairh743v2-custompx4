@@ -1,5 +1,5 @@
 diff --git a/README_MODIFICATIONS.md b/README_MODIFICATIONS.md
-index 7da02e7ef7..e3d5002baa 100644
+index 7da02e7ef7..709c6807d4 100644
 --- a/README_MODIFICATIONS.md
 +++ b/README_MODIFICATIONS.md
 @@ -20,13 +20,13 @@ Several modules were disabled to save firmware space and processing power for un
@@ -18,6 +18,28 @@ index 7da02e7ef7..e3d5002baa 100644
 +  * Changed `CONFIG_BOARD_SERIAL_RC="/dev/ttyS5"` to `CONFIG_BOARD_SERIAL_EXT2="/dev/ttyS5"`.
  * **`boards/micoair/h743-v2/src/board_config.h`**: 
    * Removed `#define RC_SERIAL_PORT "/dev/ttyS5"` and `#define BOARD_SUPPORTS_RC_SERIAL_PORT_OUTPUT` to unlock the port from RC duties.
+ 
+@@ -77,9 +77,20 @@ By default, the PX4 Commander module uses the hardware safety button as a one-wa
+ * **`src/modules/commander/Safety.cpp`**: 
+   * Replaced the one-way `_safety_off |= button_event.triggered;` logic with a true toggle: `_safety_off = !_safety_off;`.
+ 
++## 8. Multi-Instance TFmini Driver Support
++
++By default, the PX4 `tfmini` driver is a singleton and only supports running a single instance on a single serial port. This limitation was removed to allow multiple TFmini sensors to run concurrently on different serial ports.
++
++**Changes Made:**
++* **`src/drivers/distance_sensor/tfmini/TFMINI.hpp`**:
++  * Added a `get_port()` helper method.
++* **`src/drivers/distance_sensor/tfmini/tfmini_main.cpp`**:
++  * Rewrote the singleton `g_dev` to use a pointer array `g_devs[4]` supporting up to 4 concurrent sensors.
++  * Updated `start`, `status`, and `stop` functions to iterate over the sensor array.
++
+ > **⚠️ WARNING:** Because the safety button is now a true toggle switch, it is active at all times. **Pressing it while the drone is in flight will immediately cut the motors.** Ensure the switch is safely mounted where it cannot be accidentally triggered!
+ 
+-## 7. u-blox M9N GPS — Satellite Count Fix (>16 Satellites)
++## 9. u-blox M9N GPS — Satellite Count Fix (>16 Satellites)
+ 
+ By default, PX4 configures the u-blox M9N (used in the CUAV Neo 3) at **10 Hz** (100 ms measurement interval). This triggers a **hardware-level restriction** inside the M9N chip that caps `numSV` (satellites used/tracked) to a maximum of **16**, even when many more satellites are visible. This behavior is not documented in the u-blox datasheet but is confirmed in PX4 community discussions.
  
 diff --git a/boards/micoair/h743-v2/default.px4board b/boards/micoair/h743-v2/default.px4board
 index f389bf865f..9fccfceefd 100644
@@ -362,6 +384,133 @@ index 0099245cc6..e69de29bb2 100644
 -- 	case Board::u_blox9_F9P_L1L2:
 -- 		rate_meas = 200; // 5Hz
 -- 		break;
+diff --git a/src/drivers/distance_sensor/tfmini/TFMINI.hpp b/src/drivers/distance_sensor/tfmini/TFMINI.hpp
+index a424e59f1d..3befb65790 100644
+--- a/src/drivers/distance_sensor/tfmini/TFMINI.hpp
++++ b/src/drivers/distance_sensor/tfmini/TFMINI.hpp
+@@ -69,6 +69,7 @@ public:
+ 	int init();
+ 
+ 	void print_info();
++	const char *get_port() const { return _port; }
+ 
+ private:
+ 
+diff --git a/src/drivers/distance_sensor/tfmini/tfmini_main.cpp b/src/drivers/distance_sensor/tfmini/tfmini_main.cpp
+index c741c8dbbe..e462b8fa47 100644
+--- a/src/drivers/distance_sensor/tfmini/tfmini_main.cpp
++++ b/src/drivers/distance_sensor/tfmini/tfmini_main.cpp
+@@ -41,7 +41,8 @@
+ namespace tfmini
+ {
+ 
+-TFMINI	*g_dev{nullptr};
++#define TFMINI_MAX_INSTANCES 4
++TFMINI *g_devs[TFMINI_MAX_INSTANCES]{nullptr};
+ 
+ int start(const char *port, uint8_t rotation);
+ int status();
+@@ -51,56 +52,75 @@ int usage();
+ int
+ start(const char *port, uint8_t rotation)
+ {
+-	if (g_dev != nullptr) {
+-		PX4_ERR("already started");
+-		return PX4_OK;
++	for (int i = 0; i < TFMINI_MAX_INSTANCES; i++) {
++		if (g_devs[i] != nullptr && strcmp(g_devs[i]->get_port(), port) == 0) {
++			PX4_ERR("already started on %s", port);
++			return PX4_OK;
++		}
+ 	}
+ 
+-	// Instantiate the driver.
+-	g_dev = new TFMINI(port, rotation);
++	for (int i = 0; i < TFMINI_MAX_INSTANCES; i++) {
++		if (g_devs[i] == nullptr) {
++			g_devs[i] = new TFMINI(port, rotation);
+ 
+-	if (g_dev == nullptr) {
+-		PX4_ERR("driver start failed");
+-		return PX4_ERROR;
+-	}
++			if (g_devs[i] == nullptr) {
++				PX4_ERR("driver start failed (out of memory)");
++				return PX4_ERROR;
++			}
++
++			if (OK != g_devs[i]->init()) {
++				PX4_ERR("driver start failed");
++				delete g_devs[i];
++				g_devs[i] = nullptr;
++				return PX4_ERROR;
++			}
+ 
+-	if (OK != g_dev->init()) {
+-		PX4_ERR("driver start failed");
+-		delete g_dev;
+-		g_dev = nullptr;
+-		return PX4_ERROR;
++			return PX4_OK;
++		}
+ 	}
+ 
+-	return PX4_OK;
++	PX4_ERR("max instances reached");
++	return PX4_ERROR;
+ }
+ 
+ int
+ status()
+ {
+-	if (g_dev == nullptr) {
++	bool running = false;
++	for (int i = 0; i < TFMINI_MAX_INSTANCES; i++) {
++		if (g_devs[i] != nullptr) {
++			printf("state @ %p (port %s)\n", g_devs[i], g_devs[i]->get_port());
++			g_devs[i]->print_info();
++			running = true;
++		}
++	}
++
++	if (!running) {
+ 		PX4_ERR("driver not running");
+ 		return 1;
+ 	}
+ 
+-	printf("state @ %p\n", g_dev);
+-	g_dev->print_info();
+-
+ 	return 0;
+ }
+ 
+ int stop()
+ {
+-	if (g_dev != nullptr) {
+-		PX4_INFO("stopping driver");
+-		delete g_dev;
+-		g_dev = nullptr;
+-		PX4_INFO("driver stopped");
++	bool stopped = false;
++	for (int i = 0; i < TFMINI_MAX_INSTANCES; i++) {
++		if (g_devs[i] != nullptr) {
++			PX4_INFO("stopping driver on %s", g_devs[i]->get_port());
++			delete g_devs[i];
++			g_devs[i] = nullptr;
++			stopped = true;
++		}
++	}
+ 
+-	} else {
++	if (!stopped) {
+ 		PX4_ERR("driver not running");
+ 		return 1;
+ 	}
+ 
++	PX4_INFO("driver stopped");
+ 	return PX4_OK;
+ }
+ 
 diff --git a/src/drivers/gps/devices b/src/drivers/gps/devices
 index 0b9695881b..6c95e99518 160000
 --- a/src/drivers/gps/devices
