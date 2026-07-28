@@ -20,15 +20,23 @@ index 7da02e7ef7..e3d5002baa 100644
    * Removed `#define RC_SERIAL_PORT "/dev/ttyS5"` and `#define BOARD_SUPPORTS_RC_SERIAL_PORT_OUTPUT` to unlock the port from RC duties.
  
 diff --git a/boards/micoair/h743-v2/default.px4board b/boards/micoair/h743-v2/default.px4board
-index f389bf865f..bcabd296eb 100644
+index f389bf865f..9fccfceefd 100644
 --- a/boards/micoair/h743-v2/default.px4board
 +++ b/boards/micoair/h743-v2/default.px4board
-@@ -7,7 +7,7 @@ CONFIG_BOARD_SERIAL_TEL1="/dev/ttyS0"
+@@ -1,13 +1,12 @@
+ CONFIG_BOARD_TOOLCHAIN="arm-none-eabi"
+ CONFIG_BOARD_ARCHITECTURE="cortex-m7"
+-CONFIG_BOARD_SERIAL_URT6="/dev/ttyS6"
++CONFIG_BOARD_SERIAL_URT6="/dev/ttyS5"
+ CONFIG_BOARD_SERIAL_GPS1="/dev/ttyS2"
+ CONFIG_BOARD_SERIAL_GPS2="/dev/ttyS1"
+ CONFIG_BOARD_SERIAL_TEL1="/dev/ttyS0"
  CONFIG_BOARD_SERIAL_TEL2="/dev/ttyS3"
- CONFIG_BOARD_SERIAL_TEL3="/dev/ttyS4"
- CONFIG_BOARD_SERIAL_TEL4="/dev/ttyS7"
+-CONFIG_BOARD_SERIAL_TEL3="/dev/ttyS4"
+-CONFIG_BOARD_SERIAL_TEL4="/dev/ttyS7"
 -CONFIG_BOARD_SERIAL_URT5="/dev/ttyS5"
-+CONFIG_BOARD_SERIAL_EXT2="/dev/ttyS5"
++CONFIG_BOARD_SERIAL_TEL4="/dev/ttyS6"
++CONFIG_BOARD_SERIAL_EXT2="/dev/ttyS4"
  CONFIG_BOARD_PARAM_FILE="/fs/microsd/params"
  CONFIG_DRIVERS_ADC_BOARD_ADC=y
  CONFIG_DRIVERS_BAROMETER_GOERTEK_SPL06=y
@@ -354,3 +362,10 @@ index 0099245cc6..e69de29bb2 100644
 -- 	case Board::u_blox9_F9P_L1L2:
 -- 		rate_meas = 200; // 5Hz
 -- 		break;
+diff --git a/src/drivers/gps/devices b/src/drivers/gps/devices
+index 0b9695881b..6c95e99518 160000
+--- a/src/drivers/gps/devices
++++ b/src/drivers/gps/devices
+@@ -1 +1 @@
+-Subproject commit 0b9695881bd1e8f830ab4538ab3acc0050019eba
++Subproject commit 6c95e995181785fbf4a70b8960b501db37901bda
