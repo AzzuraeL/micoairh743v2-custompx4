@@ -20,13 +20,13 @@ Several modules were disabled to save firmware space and processing power for un
 * `CONFIG_DRIVERS_SAFETY_BUTTON=y`
 * `CONFIG_SYSTEMCMDS_UORB=y`
 
-## 2. UART6 Re-mapping (PC6 / PC7) to SERIAL 5
+## 2. UART6 Re-mapping (PC6 / PC7) to EXT2
 
-By default, the MicoAir H743-v2 firmware hardcoded `UART6` (PC6 and PC7) to be used strictly as an RC (Radio Controller) input. This port has been remapped to function as a generic serial port (`SERIAL 5`), making it available for telemetry, companion computers, or other generic UART devices.
+By default, the MicoAir H743-v2 firmware hardcoded `UART6` (PC6 and PC7) to be used strictly as an RC (Radio Controller) input. This port has been remapped to function as a generic serial port (`EXT2`), making it available for telemetry, companion computers, or other generic UART devices like a TFMINI.
 
 **Changes Made:**
 * **`boards/micoair/h743-v2/default.px4board`**: 
-  * Changed `CONFIG_BOARD_SERIAL_RC="/dev/ttyS5"` to `CONFIG_BOARD_SERIAL_URT5="/dev/ttyS5"`.
+  * Changed `CONFIG_BOARD_SERIAL_RC="/dev/ttyS5"` to `CONFIG_BOARD_SERIAL_EXT2="/dev/ttyS5"`.
 * **`boards/micoair/h743-v2/src/board_config.h`**: 
   * Removed `#define RC_SERIAL_PORT "/dev/ttyS5"` and `#define BOARD_SUPPORTS_RC_SERIAL_PORT_OUTPUT` to unlock the port from RC duties.
 
