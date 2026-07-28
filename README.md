@@ -20,7 +20,17 @@ Several modules were disabled to save firmware space and processing power for un
 * `CONFIG_DRIVERS_SAFETY_BUTTON=y`
 * `CONFIG_SYSTEMCMDS_UORB=y`
 
-## 2. Hardware Pin Conflict Resolution (PB5)
+## 2. UART6 Re-mapping (PC6 / PC7) to SERIAL 5
+
+By default, the MicoAir H743-v2 firmware hardcoded `UART6` (PC6 and PC7) to be used strictly as an RC (Radio Controller) input. This port has been remapped to function as a generic serial port (`SERIAL 5`), making it available for telemetry, companion computers, or other generic UART devices.
+
+**Changes Made:**
+* **`boards/micoair/h743-v2/default.px4board`**: 
+  * Changed `CONFIG_BOARD_SERIAL_RC="/dev/ttyS5"` to `CONFIG_BOARD_SERIAL_URT5="/dev/ttyS5"`.
+* **`boards/micoair/h743-v2/src/board_config.h`**: 
+  * Removed `#define RC_SERIAL_PORT "/dev/ttyS5"` and `#define BOARD_SUPPORTS_RC_SERIAL_PORT_OUTPUT` to unlock the port from RC duties.
+
+## 3. Hardware Pin Conflict Resolution (PB5)
 
 The hardware safety switch was connected to the `PB5` pin, but this pin was natively configured for `UART5_RX` by default. 
 
@@ -28,7 +38,7 @@ The hardware safety switch was connected to the `PB5` pin, but this pin was nati
 * **`boards/micoair/h743-v2/nuttx-config/nsh/defconfig`**: Commented out `CONFIG_STM32H7_UART5=y`, `CONFIG_UART5_RXBUFSIZE`, and `CONFIG_UART5_TXBUFSIZE` to disable UART5 at the OS level.
 * **`boards/micoair/h743-v2/nuttx-config/include/board.h`**: Commented out the definitions mapping `GPIO_UART5_RX` and `GPIO_UART5_TX` to `PB5` and `PB6` to free the GPIO for general use.
 
-## 3. Safety Button Pin Configuration (Active-Low / GND Toggle)
+## 4. Safety Button Pin Configuration (Active-Low / GND Toggle)
 
 The safety button was previously set as a floating input (`GPIO_FLOAT`). To allow safe manual triggering by touching the wire to Ground (GND), the pin was reconfigured with an internal pull-up resistor and the driver logic was inverted.
 
@@ -39,14 +49,14 @@ The safety button was previously set as a floating input (`GPIO_FLOAT`). To allo
   * Inverted the pin read logic (`const bool button_pressed = !px4_arch_gpioread(GPIO_BTN_SAFETY);`).
   * The button now reliably triggers when safely shorted to **GND**.
 
-## 4. Enabling the Safety Button Driver at Startup
+## 5. Enabling the Safety Button Driver at Startup
 
 The `safety_button` module was not enabled to compile or run by default on the MicoAir H743-v2 board.
 
 **Changes Made:**
 * **`boards/micoair/h743-v2/init/rc.board_defaults`**: Appended `safety_button start` to the board's startup script to initialize the driver upon boot.
 
-## 5. Custom Hold-Time Logic (3s Disable / 1s Enable)
+## 6. Custom Hold-Time Logic (3s Disable / 1s Enable)
 
 The standard PX4 safety button driver requires a fixed 1-second hold to disable the safety, and does not natively support different hold times based on the current safety state. The driver was modified to check the `vehicle_status` and apply dynamic timings.
 
@@ -59,7 +69,7 @@ The standard PX4 safety button driver requires a fixed 1-second hold to disable 
   * Added logic to read `status.safety_off`.
   * **Timing**: Requires 90 cycles (3 seconds) to disable safety, and 30 cycles (1 second) to re-enable safety.
 
-## 6. Toggle Capability Enhancement
+## 7. Toggle Capability Enhancement
 
 By default, the PX4 Commander module uses the hardware safety button as a one-way switch (it can only unlock the safety; it cannot lock it again). This was modified to act as a two-way toggle switch.
 
