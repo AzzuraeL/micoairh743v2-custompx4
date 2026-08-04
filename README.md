@@ -69,13 +69,15 @@ The standard PX4 safety button driver requires a fixed 1-second hold to disable 
   * Added logic to read `status.safety_off`.
   * **Timing**: Requires 90 cycles (3 seconds) to disable safety, and 30 cycles (1 second) to re-enable safety.
 
-## 7. Toggle Capability Enhancement
+## 7. Toggle Capability Enhancement & Boot State
 
-By default, the PX4 Commander module uses the hardware safety button as a one-way switch (it can only unlock the safety; it cannot lock it again). This was modified to act as a two-way toggle switch.
+By default, the PX4 Commander module uses the hardware safety button as a one-way switch (it can only unlock the safety; it cannot lock it again), and it always boots in a locked state. This was modified to act as a two-way toggle switch and to boot unlocked.
 
 **Changes Made:**
 * **`src/modules/commander/Safety.cpp`**: 
   * Replaced the one-way `_safety_off |= button_event.triggered;` logic with a true toggle: `_safety_off = !_safety_off;`.
+* **`src/modules/commander/Safety.hpp`**:
+  * Changed the default initialization of `_safety_off` and `_previous_safety_off` from `false` to `true` so the drone boots up ready to arm without requiring a button press.
 
 ## 8. Multi-Instance TFmini Driver Support
 

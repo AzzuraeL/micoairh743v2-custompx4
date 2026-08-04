@@ -1,5 +1,5 @@
 diff --git a/README_MODIFICATIONS.md b/README_MODIFICATIONS.md
-index 7da02e7ef7..709c6807d4 100644
+index 7da02e7ef7..e0f493be5a 100644
 --- a/README_MODIFICATIONS.md
 +++ b/README_MODIFICATIONS.md
 @@ -20,13 +20,13 @@ Several modules were disabled to save firmware space and processing power for un
@@ -19,10 +19,22 @@ index 7da02e7ef7..709c6807d4 100644
  * **`boards/micoair/h743-v2/src/board_config.h`**: 
    * Removed `#define RC_SERIAL_PORT "/dev/ttyS5"` and `#define BOARD_SUPPORTS_RC_SERIAL_PORT_OUTPUT` to unlock the port from RC duties.
  
-@@ -77,9 +77,20 @@ By default, the PX4 Commander module uses the hardware safety button as a one-wa
+@@ -69,17 +69,30 @@ The standard PX4 safety button driver requires a fixed 1-second hold to disable
+   * Added logic to read `status.safety_off`.
+   * **Timing**: Requires 90 cycles (3 seconds) to disable safety, and 30 cycles (1 second) to re-enable safety.
+ 
+-## 7. Toggle Capability Enhancement
++## 7. Toggle Capability Enhancement & Boot State
+ 
+-By default, the PX4 Commander module uses the hardware safety button as a one-way switch (it can only unlock the safety; it cannot lock it again). This was modified to act as a two-way toggle switch.
++By default, the PX4 Commander module uses the hardware safety button as a one-way switch (it can only unlock the safety; it cannot lock it again), and it always boots in a locked state. This was modified to act as a two-way toggle switch and to boot unlocked.
+ 
+ **Changes Made:**
  * **`src/modules/commander/Safety.cpp`**: 
    * Replaced the one-way `_safety_off |= button_event.triggered;` logic with a true toggle: `_safety_off = !_safety_off;`.
- 
++* **`src/modules/commander/Safety.hpp`**:
++  * Changed the default initialization of `_safety_off` and `_previous_safety_off` from `false` to `true` so the drone boots up ready to arm without requiring a button press.
++
 +## 8. Multi-Instance TFmini Driver Support
 +
 +By default, the PX4 `tfmini` driver is a singleton and only supports running a single instance on a single serial port. This limitation was removed to allow multiple TFmini sensors to run concurrently on different serial ports.
@@ -33,7 +45,7 @@ index 7da02e7ef7..709c6807d4 100644
 +* **`src/drivers/distance_sensor/tfmini/tfmini_main.cpp`**:
 +  * Rewrote the singleton `g_dev` to use a pointer array `g_devs[4]` supporting up to 4 concurrent sensors.
 +  * Updated `start`, `status`, and `stop` functions to iterate over the sensor array.
-+
+ 
  > **⚠️ WARNING:** Because the safety button is now a true toggle switch, it is active at all times. **Pressing it while the drone is in flight will immediately cut the motors.** Ensure the switch is safely mounted where it cannot be accidentally triggered!
  
 -## 7. u-blox M9N GPS — Satellite Count Fix (>16 Satellites)
@@ -63,7 +75,7 @@ index f389bf865f..9fccfceefd 100644
  CONFIG_DRIVERS_ADC_BOARD_ADC=y
  CONFIG_DRIVERS_BAROMETER_GOERTEK_SPL06=y
 diff --git a/micoair_h743_v2_custom.patch b/micoair_h743_v2_custom.patch
-index 0099245cc6..e69de29bb2 100644
+index 0099245cc6..7299b9b1b1 100644
 --- a/micoair_h743_v2_custom.patch
 +++ b/micoair_h743_v2_custom.patch
 @@ -1,317 +0,0 @@
@@ -518,3 +530,17 @@ index 0b9695881b..6c95e99518 160000
 @@ -1 +1 @@
 -Subproject commit 0b9695881bd1e8f830ab4538ab3acc0050019eba
 +Subproject commit 6c95e995181785fbf4a70b8960b501db37901bda
+diff --git a/src/modules/commander/Safety.hpp b/src/modules/commander/Safety.hpp
+index 6d52c797ac..29ab3f8505 100644
+--- a/src/modules/commander/Safety.hpp
++++ b/src/modules/commander/Safety.hpp
+@@ -57,7 +57,7 @@ private:
+ 	uORB::Subscription _safety_button_sub{ORB_ID::safety_button};
+ 
+ 	bool _button_available{false};///< Set to true if a safety button is connected
+-	bool _safety_off{false}; ///< Set to true if safety is off
+-	bool _previous_safety_off{false}; ///< Previous safety value
++	bool _safety_off{true}; ///< Set to true if safety is off (starts unlocked by default)
++	bool _previous_safety_off{true}; ///< Previous safety value
+ 	bool _safety_disabled{false}; ///< Set to true if safety is disabled
+ };
