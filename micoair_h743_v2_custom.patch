@@ -54,7 +54,7 @@ index 7da02e7ef7..e0f493be5a 100644
  By default, PX4 configures the u-blox M9N (used in the CUAV Neo 3) at **10 Hz** (100 ms measurement interval). This triggers a **hardware-level restriction** inside the M9N chip that caps `numSV` (satellites used/tracked) to a maximum of **16**, even when many more satellites are visible. This behavior is not documented in the u-blox datasheet but is confirmed in PX4 community discussions.
  
 diff --git a/boards/micoair/h743-v2/default.px4board b/boards/micoair/h743-v2/default.px4board
-index f389bf865f..9fccfceefd 100644
+index f389bf865f..cb50325ffc 100644
 --- a/boards/micoair/h743-v2/default.px4board
 +++ b/boards/micoair/h743-v2/default.px4board
 @@ -1,13 +1,12 @@
@@ -74,6 +74,24 @@ index f389bf865f..9fccfceefd 100644
  CONFIG_BOARD_PARAM_FILE="/fs/microsd/params"
  CONFIG_DRIVERS_ADC_BOARD_ADC=y
  CONFIG_DRIVERS_BAROMETER_GOERTEK_SPL06=y
+@@ -23,6 +22,7 @@ CONFIG_DRIVERS_GPS=y
+ CONFIG_DRIVERS_IMU_BOSCH_BMI088=y
+ CONFIG_DRIVERS_IMU_BOSCH_BMI270=y
+ CONFIG_COMMON_MAGNETOMETER=y
++CONFIG_DRIVERS_OSD_ATXXXX=y
+ CONFIG_DRIVERS_OSD_MSP_OSD=y
+ CONFIG_DRIVERS_POWER_MONITOR_INA220=y
+ CONFIG_DRIVERS_POWER_MONITOR_INA226=y
+diff --git a/boards/micoair/h743-v2/init/rc.board_extras b/boards/micoair/h743-v2/init/rc.board_extras
+index e7653077db..549676dd7d 100644
+--- a/boards/micoair/h743-v2/init/rc.board_extras
++++ b/boards/micoair/h743-v2/init/rc.board_extras
+@@ -4,4 +4,4 @@
+ #------------------------------------------------------------------------------
+ 
+ # enable onboard OSD chip
+-# atxxxx start -s
++atxxxx start -s
 diff --git a/micoair_h743_v2_custom.patch b/micoair_h743_v2_custom.patch
 index 0099245cc6..7299b9b1b1 100644
 --- a/micoair_h743_v2_custom.patch
